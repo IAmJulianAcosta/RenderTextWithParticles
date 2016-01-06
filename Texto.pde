@@ -36,7 +36,7 @@ int canvasWidth = 1280;
 int canvasHeight = 300;
 
 void settings() {
-  size(canvasWidth, canvasHeight, OPENGL);
+  size(100, 100, OPENGL);
   PJOGL.profile=1;
 }
 
