@@ -8,7 +8,7 @@ class Particle {
 
   public Particle(float id, PolygonBlob poly) {
     this.id = id;
-    s = random(2, 6); // speed
+    s = random(0.5, 3); // speed
     this.poly = poly;
   }
 
@@ -49,7 +49,7 @@ class Particle {
         yp=y;
       }
     }
-    
+   
     // individual particle color
     renderCanvas.stroke(col);
     // line from previous to current position
