@@ -1,4 +1,10 @@
-import controlP5.*; //<>//
+/* //<>//
+ * All this work is based on work of Amnom Owed, I adapted his kinect example
+ * (http://www.creativeapplications.net/processing/kinect-physics-tutorial-for-processing/)
+ * to use with text. It uses ControlP5, and Syphon to send rendered text.
+ */
+
+import controlP5.*;
 import codeanticode.syphon.*;
 import processing.opengl.*; // opengl
 import blobDetection.*; // blobs
