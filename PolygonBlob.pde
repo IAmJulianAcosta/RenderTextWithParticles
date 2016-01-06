@@ -1,4 +1,4 @@
-import java.util.Collections;
+import java.util.Collections; //<>// //<>//
 // an extended polygon class with my own customized createPolygon() method (feel free to improve!)
 public class PolygonBlob extends Polygon {
 
@@ -64,7 +64,7 @@ public class PolygonBlob extends Polygon {
       // if there are already points in the polygon
       if (npoints > 0) {
         // use the polygon's last point as a starting point
-        PVector lastPoint = new PVector(xpoints[npoints-1], ypoints[npoints-1]); //<>//
+        PVector lastPoint = new PVector(xpoints[npoints-1], ypoints[npoints-1]);
         // go over all contours
         for (int i=0; i<contours.size(); i++) {
           ArrayList <PVector> c = contours.get(i);
@@ -93,10 +93,36 @@ public class PolygonBlob extends Polygon {
         }
         // if the polygon is still empty
       } else {
-        // set this as the selected contour 
-        selectedContour = 0;  //<>//
-        // set selectedPoint to 0 (which signals first point) 
-        selectedPoint = 0;
+        // use a starting point in the lower-right
+        PVector closestPoint = new PVector(0, 0);
+        // go over all contours
+        for (int i=0; i<contours.size(); i++) {
+
+          ArrayList<PVector> c = contours.get(i);
+          // get the contour's first point
+          PVector fp = c.get(0);
+
+          // get the contour's last point
+          PVector lp = c.get(c.size()-1);
+          // if the first point is the lowest and more to the left than the current closestPoint
+          if (fp.y > closestPoint.y && fp.x > closestPoint.x) {
+            // set closestPoint to first point
+            closestPoint = fp;
+            // set this as the selected contour
+            selectedContour = i;
+            // set selectedPoint to 0 (which signals first point)
+            selectedPoint = 0;
+          }
+          // if the last point is the lowest and more to the left than the current closestPoint
+          if (lp.y > closestPoint.y && lp.x > closestPoint.x) {
+            // set closestPoint to last point
+            closestPoint = lp;
+            // set this as the selected contour
+            selectedContour = i;
+            // set selectedPoint to 1 (which signals last point)
+            selectedPoint = 1;
+          }
+        }
       }
 
       // add contour to polygon
@@ -105,6 +131,7 @@ public class PolygonBlob extends Polygon {
       if (selectedPoint > 0) { 
         Collections.reverse(contour);
       }
+
       // add all the points in the contour to the polygon
       for (PVector p : contour) {
         addPoint(int(p.x), int(p.y));
@@ -121,11 +148,11 @@ public class PolygonBlob extends Polygon {
     ArrayList<ArrayList> contours = createContours ();
     generatePolygonFromContours (contours);
   }
-  
+
   public int width () {
     return getBounds ().width;
   }
-  
+
   public int height () {
     return getBounds ().height;
   }

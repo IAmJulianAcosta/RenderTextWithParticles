@@ -34,12 +34,16 @@ final int PARTICLE_AMOUNT = 500;
 final int FONT_SIZE = 180;
 
 ArrayList <Particle []> particles;
+ArrayList <PolygonBlob> polygons;
 
 // global variables to influence the movement of all particles
 float globalX, globalY;
 
-int canvasWidth = 1280;
-int canvasHeight = 300;
+int canvasWidth = 200;
+int canvasHeight = 200;
+
+int renderCanvasWidth = 1200;
+int renderCanvasHeight = 240;
 
 void settings() {
   size(100, 100, OPENGL);
@@ -48,11 +52,12 @@ void settings() {
 
 void setup() {
   textCanvas = createGraphics(canvasWidth, canvasHeight, OPENGL);
-  renderCanvas = createGraphics(canvasWidth, canvasHeight, OPENGL);
+  renderCanvas = createGraphics(renderCanvasWidth, renderCanvasHeight, OPENGL);
 
   // Create syhpon server to send frames out.
   server = new SyphonServer(this, "Processing Syphon");
   cf = new ControlFrame(this, 500, 100, "Controls");
+  polygons = new ArrayList <PolygonBlob> ();
 
   mono = loadFont("sansserif.vlw");
 
@@ -67,8 +72,9 @@ long delta;
 
 void draw() {
   renderCanvas.beginDraw();
+  renderCanvas.noStroke ();
   renderCanvas.fill(bgColor, 65);
-  renderCanvas.rect(0, 0, width, height);
+  renderCanvas.rect(0, 0, renderCanvasWidth, renderCanvasHeight);
   String textToRender = cf.getText ();
   boolean changed = false;
 
@@ -77,40 +83,56 @@ void draw() {
     previousText = textToRender;
     particles = new ArrayList <Particle []> ();
     delta = millis();
-    println ("me trabo");
+    polygons.clear ();
   }
 
-  int offset = 0;
-
-  for (int i = 0; i < textToRender.length (); i++) {
-    /*beginShape();
-     for (int j = 0; j < poly.npoints; j++) {
-     println ("Poly points: ", poly.xpoints [j], poly.ypoints [j], j);
-     vertex (poly.xpoints [j], poly.ypoints [j]);
-     }
-     endShape ();*/
-
+  /*for (int i = 0; i < polygons.size (); i++) {
+   PolygonBlob poly = polygons.get (i);
+   beginShape();
+   for (int j = 0; j < poly.npoints; j++) {
+   vertex (poly.xpoints [j], poly.ypoints [j]);
+   }
+   endShape ();
+   }*/
+   float traslateAmount = 0;
+  for (int i = 0, polygonIndex = 0; i < textToRender.length (); i++) { 
     if (changed) {
       if (textToRender.charAt (i) == ' ') {
-        offset += FONT_SIZE/2;
         particles.add (new Particle[0]);
       } else {
-        drawText (i, textToRender, offset);
-        //println ("Draw Text:", millis()-delta);
+        drawText (i, textToRender);
         PolygonBlob poly = new PolygonBlob();
+        polygons.add (poly);
         updateBlobs (poly);
-        //println ("Update blobs:", millis()-delta);
         Particle [] particleGroup = new Particle[PARTICLE_AMOUNT];
         particles.add (particleGroup);
-        //println ("New particle group:", millis()-delta);
         setupFlowfield(particleGroup, poly);
-        //println ("Setup Flow Field:", millis()-delta);
-        offset += poly.width ();
       }
     }
+    renderCanvas.pushMatrix ();
+    traslate: 
+    {
+      if (polygonIndex > 0) {
+        if (textToRender.charAt (i-1) != ' ') {
+          traslateAmount += polygons.get (polygonIndex-1).width () + FONT_SIZE*0.05;
+          //Avanzar en el index de poligonos solo si hay uno, si no, pues no.
+          polygonIndex++;
+        } else {
+          traslateAmount += FONT_SIZE*0.5;
+          //Si hay un espacio, que no avance en el index (se puede obviar pero quiero entender)
+          polygonIndex+=0;
+        }
+      }
+      else {
+        //si el index es igual a cero, que igual lo avance
+        polygonIndex++;
+      }
+    }
+    renderCanvas.translate (traslateAmount, 0);
     if (textToRender.charAt (i) != ' ') {
       drawFlowfield(particles.get (i));
     }
+    renderCanvas.popMatrix ();
   }
 
   renderCanvas.endDraw ();
@@ -118,18 +140,16 @@ void draw() {
 
   if (changed) {
     changed = false;
-    println ("me destrabo", millis()-delta);
   }
 }
 
-void drawText (int index, String text, int offset) {
+void drawText (int index, String text) {
   textCanvas.beginDraw();
   textCanvas.background(0);
   textCanvas.textFont(mono);
   textCanvas.textSize (FONT_SIZE);
   textCanvas.pushMatrix ();
-  textCanvas.translate (offset, 0);
-  textCanvas.text (text.charAt (index), 20, 200);
+  textCanvas.text (text.charAt (index), 0, 160);
   textCanvas.popMatrix ();
   textCanvas.endDraw();
   //image(canvas, 0, 0);
@@ -140,12 +160,13 @@ void updateBlobs (PolygonBlob poly) {
   blobs.copy(textCanvas, 0, 0, textCanvas.width, textCanvas.height, 0, 0, blobs.width, blobs.height);
   //image (blobs, 0, 0);
 
+  blobs.filter (BLUR);
+
   if (textCanvas.pixels != null) {
     theBlobDetection.computeBlobs(blobs.pixels);
   }
   // create the polygon from the blobs (custom functionality, see class)
   poly.createPolygon();
-  println ("Create polygon:", millis()-delta);
 }
 
 void setupFlowfield(Particle [] flow, PolygonBlob poly) {
